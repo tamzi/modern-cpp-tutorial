@@ -51,7 +51,7 @@ There are also other features such as parameter binding (C++11 provides `std::bi
 
 ## 1.2 Compatibilities with C
 
-For some force majeure and historical reasons, we had to use some C code (even old C code) in C++, for example, Linux system calls. Before the advent of modern C++, most people talked about "what is the difference between C and C++". Generally speaking, in addition to answering the object-oriented class features and the template features of generic programming, there is no other opinion, or even a direct answer. "Almost" is also a lot of people. The Wayne diagram in Figure 1.2 roughly answers the C and C++ related compatibility.
+For some force majeure and historical reasons, we had to use some C code (even old C code) in C++, for example, Linux system calls. Before the advent of modern C++, most people talked about "what is the difference between C and C++". Generally speaking, in addition to answering the object-oriented class features and the template features of generic programming, there is no other opinion, or even a direct answer. "Almost" is also a lot of people. The Venn diagram in Figure 1.2 roughly answers the C and C++ related compatibility.
 
 ![Figure 1.2: Compatabilities between ISO C and ISO C++](../../assets/figures/comparison.png)
 
@@ -93,7 +93,7 @@ You should first compile the C code with `gcc`:
 gcc -c foo.c
 ```
 
-Comple and output the `foo.o` file, and link the C++ code to the `.o` file using `clang++` (or both compile to `.o` and then unlink them together):
+Compile and output the `foo.o` file, and link the C++ code to the `.o` file using `clang++` (or both compile to `.o` and then link them together):
 
 ```bash
 clang++ 1.1.cpp foo.o -std=c++2a -o 1.1

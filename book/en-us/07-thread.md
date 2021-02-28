@@ -303,7 +303,7 @@ int main() {
 }
 ```
 
-Of course, not all types provide atomic operations because the feasibility of atomic operations depends on the architecture of the CPU and whether the type structure being instantiated satisfies the memory alignment requirements of the architecture, so we can always pass Std::atomic<T>::is_lock_free` to check if the atom type needs to support atomic operations, for example:
+Of course, not all types provide atomic operations because the feasibility of atomic operations depends on the architecture of the CPU and whether the type structure being instantiated satisfies the memory alignment requirements of the architecture, so we can always pass `std::atomic<T>::is_lock_free` to check if the atom type needs to support atomic operations, for example:
 
 ```cpp
 #include <atomic>
@@ -314,6 +314,8 @@ struct A {
     int y;
     long long z;
 };
+
+int main() {
     std::atomic<A> a;
     std::cout << std::boolalpha << a.is_lock_free() << std::endl;
     return 0;
@@ -364,7 +366,7 @@ Weakening the synchronization conditions between processes, usually we will cons
           x.store(2)
     ```
 
-    Under the order consistency requirement, `x.load()` must read the last written data, so `x.store(2)` and `x.store(1)` do not have any guarantees, ie As long as ``x.store(2)` of `T2` occurs before `x.store(3)`.
+    Under the order consistency requirement, `x.load()` must read the last written data, so `x.store(2)` and `x.store(1)` do not have any guarantees, ie As long as `x.store(2)` of `T2` occurs before `x.store(3)`.
 
 3. Causal consistency: its requirements are further reduced, only the sequence of causal operations is guaranteed, and the order of non-causal operations is not required.
 
@@ -427,7 +429,7 @@ In order to achieve the ultimate performance and achieve consistency of various 
     std::atomic<int> counter = {0};
     std::vector<std::thread> vt;
     for (int i = 0; i < 100; ++i) {
-        vt.emplace_back([](){
+        vt.emplace_back([&](){
             counter.fetch_add(1, std::memory_order_relaxed);
         });
     }
@@ -442,7 +444,8 @@ In order to achieve the ultimate performance and achieve consistency of various 
 2. Release/consumption model: In this model, we begin to limit the order of operations between processes. If a thread needs to modify a value, but another thread will have a dependency on that operation of the value, that is, the latter depends. former. Specifically, thread A has completed three writes to `x`, and thread `B` relies only on the third `x` write operation, regardless of the first two write behaviors of `x`, then `A ` When active `x.release()` (ie using `std::memory_order_release`), the option `std::memory_order_consume` ensures that `B` observes `A` when calling `x.load()` Three writes to `x`. Let's look at an example:
 
     ```cpp
-    std::atomic<int*> ptr;
+    // initialize as nullptr to prevent consumer load a dangling pointer
+    std::atomic<int*> ptr(nullptr);
     int v;
     std::thread producer([&]() {
         int* p = new int(42);
@@ -462,7 +465,7 @@ In order to achieve the ultimate performance and achieve consistency of various 
 
 3. Release/Acquire model: Under this model, we can further tighten the order of atomic operations between different threads, specifying the timing between releasing `std::memory_order_release` and getting `std::memory_order_acquire`. **All** write operations before the release operation are visible to any other thread, ie, happens-before.
 
-    As you can see, `std::memory_order_release` ensures that the write behavior after it does not occur before the release operation, which is a backward barrier, and`std::memory_order_acquire` ensures that its previous write behavior does not occur after this acquisition operation, there is a forward barrier. For the `std::memory_order_acq_rel` option, it combines the characteristics of the two and uniquely determines a memory barrier, so that the current thread's reading and writing of memory will not be rearranged before and after this operation.
+    As you can see, `std::memory_order_release` ensures that the write behavior after it does not occur before the release operation, which is a forward barrier, and`std::memory_order_acquire` ensures that its previous write behavior does not occur after this acquisition operation, there is a backward barrier. For the `std::memory_order_acq_rel` option, it combines the characteristics of the two and uniquely determines a memory barrier, so that the current thread's reading and writing of memory will not be rearranged before and after this operation.
 
     Let's check an example:
 
@@ -498,7 +501,7 @@ In order to achieve the ultimate performance and achieve consistency of various 
     std::atomic<int> counter = {0};
     std::vector<std::thread> vt;
     for (int i = 0; i < 100; ++i) {
-        vt.emplace_back([](){
+        vt.emplace_back([&](){
             counter.fetch_add(1, std::memory_order_seq_cst);
         });
     }
